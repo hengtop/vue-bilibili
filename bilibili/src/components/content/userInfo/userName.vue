@@ -3,7 +3,8 @@
     <div class="nick-name">
       <div class="name">{{model.username}}</div>
       <div class="lv_icon">
-        <span class="gender">♂</span>
+        <span v-if="model.gender == 1" class="gender">♂</span>
+        <span v-else class="gender" style="color:#fb7299;">♀</span>
         <img src="~assets/img/lv_5.png" alt />
       </div>
       <div class="vip">年度大会员</div>

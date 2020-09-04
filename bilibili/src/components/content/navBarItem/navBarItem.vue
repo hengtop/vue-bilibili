@@ -1,7 +1,7 @@
 <template>
   <div v-if="model" class="nav-bar-item">
     <navBar class="nav-bar">
-      <div slot="left" class="left">
+      <div slot="left" class="left" @click="$router.push('/home')">
         <img class="logo" src="~assets/img/bilibili_logo.png" alt />
       </div>
       <div slot="center">
@@ -13,11 +13,11 @@
         </div>
       </div>
       <div slot="right" class="right">
-        <div class="avatar">
-          <img v-if="model.user_img" :src="model.user_img" alt="" />
+        <div class="avatar" @click="$router.push('/userInfo')">
+          <img v-if="model.user_img" :src="model.user_img" alt />
           <img v-else src="~assets/logo.png" alt />
-          <span class="download-app">下载app</span>
         </div>
+        <span class="download-app">下载app</span>
       </div>
     </navBar>
   </div>
@@ -27,7 +27,7 @@
 import navBar from "components/common/navBar/navBar";
 export default {
   name: "navBarItem",
-  props:['model'],
+  props: ["model"],
   data() {
     return {};
   },
@@ -52,6 +52,9 @@ export default {
       vertical-align: middle;
       margin-bottom: 5px;
       margin-left: 10px;
+    }
+    .avatar{
+      display: inline-block;
     }
     .avatar img {
       width: 22px;
@@ -80,14 +83,14 @@ export default {
         border-radius: 12px;
         background-color: #f4f4f4;
         position: relative;
-        span{
+        span {
           position: absolute;
           top: -10px;
           left: 30px;
           font-size: 10px;
           color: #aaa;
         }
-        .icon{
+        .icon {
           position: absolute;
           top: 4px;
           left: 10px;

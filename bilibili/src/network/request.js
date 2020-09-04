@@ -9,7 +9,7 @@ const http = axios.create({
 
   //请求拦截器设置
   http.interceptors.request.use((config) => {
-    console.log(config);
+    //console.log(config,'请求拦截');
     if(localStorage.getItem('token')&&localStorage.getItem('id')){
       config.headers.Authorization = 'Bearer ' + localStorage.getItem('token');
     }

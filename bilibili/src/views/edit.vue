@@ -32,6 +32,7 @@
     >
       <van-field v-model="content" placeholder autofocus />
     </van-dialog>
+    
     <van-dialog
       v-model="showText"
       :title="Title"
