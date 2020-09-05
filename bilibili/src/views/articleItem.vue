@@ -17,7 +17,7 @@
         </div>
         <div class="play-hot">
           <div class="left">
-            <span>
+            <span @click="collection">
               <img src="~assets/img/收藏.png" alt />
               收藏
             </span>
@@ -42,8 +42,8 @@
     <div class="commend-wrapper">
       <detail class="detail" v-for="(item,index) in commendList" :key="index" :detailItem="item"></detail>
     </div>
-    <commentTitle :model="model"></commentTitle>
-    <comment :commentList="commentList"></comment>
+    <commentTitle :model="model" :commentLenght="commentLenght" @editComment="editComment" ref="commentTitle"></commentTitle>
+    <comment class="comment-wrapper" :commentList="commentList" @replyWho="replyWho"  ></comment>
   </div>
 </template>
 
@@ -52,23 +52,31 @@ import navBarItem from "components/content/navBarItem/navBarItem";
 import detail from "views/detail";
 import commentTitle from "components/content/comment/commentTitle";
 import comment from "components/content/comment/comment";
+import {getDate} from 'common/tool'
 export default {
   name: "articleItem",
   data() {
     return {
-      model: {},
-      articleData: {},
-      commendList: {},
-      commentList:{},
+      model: {},//用户信息
+      articleData: {},//视频详情数据
+      commendList: {},//推荐视频列表
+      commentList: {},//评论列表
+      commentLenght: 0,//获取的评论条数
+      sendComment:{//发送的评论对象
+        comment_content:'',
+        comment_date:'',
+        parent_id:null,
+        article_id:null,
+      }
     };
   },
   created() {
-    if(localStorage.getItem('token')){
+    if (localStorage.getItem("token")) {
       this.userInfoData();
     }
     this.articleItem();
     this.commendData();
-    this.commentData()
+    this.commentData();
   },
   methods: {
     //获取用户信息
@@ -87,10 +95,49 @@ export default {
       this.commendList = res.data;
     },
     //获取评论数据
-    async commentData(){
-      const res = await this.$http.get('/comment/'+this.$route.params.id)
-      this.commentList = res.data;
-    }
+    async commentData() {
+      const res = await this.$http.get("/comment/" + this.$route.params.id);
+      this.commentLenght = res.data.length; //获取总的评论个数
+      this.changeCommentData(res.data); //处理得到的评论结构
+    },
+    //处理改造评论数据方法
+    changeCommentData(list) {
+      function fn(temp) {
+        let arr1 = [];
+        for (let item of list) {
+          if (item.parent_id == temp) {
+            arr1.push(item);
+            item.child = fn(item.comment_id); //递归处理多级评论嵌套
+          }
+        }
+        return arr1;
+      }
+      const res = fn(null);
+      this.commentList = res;
+    },
+    //发送评论
+   async editComment(content) {
+      this.sendComment.comment_content = content;
+      this.sendComment.comment_date = getDate();
+      this.sendComment.article_id = this.$route.params.id;//上述三个属性是每级评论都有的
+      const res = await this.$http.post('/comment_post/'+localStorage.getItem('id'),this.sendComment);
+      //再次获取评论
+      this.commentData();
+      //清空评论对象id，避免下次回复的为同一对象
+      this.sendComment.parent_id = null;
+      if(res.status == 200){
+        this.$msg.fail('评论发表成功')//弹窗提示
+      }
+    },
+    //获取到回复对象的评论信息
+    replyWho(item){
+      this.$refs.commentTitle.getFocus(item.userinfo.name);//获得焦点，修改提示文字为回复对象
+      this.sendComment.parent_id = item.comment_id;//设置评论等级
+    },
+    //收藏功能
+    async collection(){
+      const res = await this.$http.post('/collection/'+localStorage.getItem('id'),this.$route.params.id)
+    },
   },
   watch: {
     $route() {
@@ -113,6 +160,7 @@ export default {
 #articleItem {
   width: 100%;
   background-color: #fff;
+  padding-bottom: 200px;
 }
 .video-wrapper {
   width: 100%;
@@ -121,6 +169,7 @@ export default {
   width: 100%;
 }
 
+//视频播放样式
 .title {
   width: 100%;
   padding: 10px 12px;
@@ -188,16 +237,20 @@ export default {
     }
   }
 }
-
+//推荐样式
 .commend-wrapper {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  padding-bottom: 35px;
   border-bottom: 1px solid #e7e7e7;
   .detail {
     width: 46%;
     padding: 8px 5px;
   }
+}
+
+//评论样式
+.comment-wrapper {
+  margin: 10px 15px 9px;
 }
 </style>

@@ -1,9 +1,8 @@
 <template>
-  <div class="comment-parent" v-if="commentList">
+  <div class="comment-parent">
     <div
       class="comment-wrapper"
-      v-for="parentItem in commentList"
-      :commentList="parentItem"
+      v-for="parentItem in commentChildList"
       :key="parentItem.comment_id"
     >
       <div class="comment-item">
@@ -12,43 +11,47 @@
           <img v-else src="~assets/logo.png" alt />
         </div>
         <div class="main-wrapper">
-          <div class="title" v-if="parentItem.userinfo">
+          <div class="title">
             <span v-if="parentItem.userinfo.name">{{parentItem.userinfo.name}}</span>
             <span v-else>此用户没有设置昵称（官方）</span>
             <span>{{parentItem.comment_date}}</span>
           </div>
-          <div class="content">{{parentItem.comment_content}}<span @click="replyWho(parentItem)" class="reply">喷</span></div>
+          <div class="content">
+            <span v-show="replyWhoFlag" style="color:#478ef0">{{'回复 '+parentItem.parent_user_info.name+':'}}</span>
+            {{parentItem.comment_content}}
+            <span class="reply" @click="replyWho(parentItem)">喷</span>
+          </div>
         </div>
       </div>
-      <commentChild class="comment-child" :commentChildList="parentItem.child" @replyWhoChild="replyWho"></commentChild>
+      <!-- 组件的递归使用实现评论递归 -->
+      <commentChild :commentChildList="parentItem.child" replyWhoFlag="true" @replyWhoChild="replyWhoChild"></commentChild>
     </div>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-import commentChild from "./commentChild";
 export default {
-  name: "comment",
-  props: ["commentList"],
+  name: "commentChild",
+  props: ["commentChildList", "replyWhoFlag"], //replyWho表示二级以上的评论（不含二级）要加上谁谁回复谁的标志
   data() {
     return {};
   },
   methods: {
-    //点击发送回复对象信息
+    //下面是递增式进行组件自下而上传值     
     replyWho(item){
-      this.$emit("replyWho",item)
-    },  
+      this.$emit('replyWhoChild',item);
+    },
+    replyWhoChild(item){
+      this.replyWho(item);//类递归调用
+    }
   },
-  components: {
-    commentChild,
-  },
+  components: {},
 };
 </script>
 
 <style lang="less" scoped>
 .comment-parent {
   .comment-wrapper {
-    border-bottom: 1px solid #e7e7e7;
     .comment-item {
       display: flex;
       padding: 12px 0;
@@ -70,6 +73,7 @@ export default {
           margin-bottom: 5px;
         }
         .content {
+          padding-top:5px;
           word-break: break-all; //换行
           font-size: 13px;
           position: relative;
@@ -81,9 +85,6 @@ export default {
           }
         }
       }
-    }
-    .comment-child {
-      padding-left: 40px;
     }
   }
 }
