@@ -1,7 +1,7 @@
 <template>
   <div v-if="detailItem.img" id="detail" @click="pushDetail" ref="img">
     <div class="detail-item">
-      <img v-lazy="detailItem.img" alt  style="width:100%;" />
+      <img  v-lazy="detailItem.img" alt  style="width:100%;" />
       <div class="play-info-wrapper">
         <div class="play-info">
           <span class="play-num"><img src="~assets/img/播放数_32.png" /> 666</span>

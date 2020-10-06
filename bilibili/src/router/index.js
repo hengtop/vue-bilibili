@@ -7,7 +7,8 @@ const login = () => import('views/login');
 const userInfo = () => import('views/userInfo');
 const edit = () => import('views/edit');
 const home = () => import('views/home');
-const articleItem = () => import('views/articleItem')
+const articleItem = () => import('views/articleItem');
+const editCategory = () => import('views/editCategory');
 Vue.use(VueRouter)
 
 const routes = [
@@ -47,6 +48,10 @@ const routes = [
   {
     path:'/articleItem/:id',
     component: articleItem,
+  },
+  {
+    path:'/editCategory',
+    component:editCategory,
   }
 
 ]

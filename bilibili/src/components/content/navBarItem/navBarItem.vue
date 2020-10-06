@@ -1,5 +1,5 @@
 <template>
-  <div v-if="model" class="nav-bar-item">
+  <div class="nav-bar-item">
     <navBar class="nav-bar">
       <div slot="left" class="left" @click="$router.push('/home')">
         <img class="logo" src="~assets/img/bilibili_logo.png" alt />
@@ -27,9 +27,22 @@
 import navBar from "components/common/navBar/navBar";
 export default {
   name: "navBarItem",
-  props: ["model"],
   data() {
-    return {};
+    return {
+      model: {},
+    };
+  },
+  created(){
+    if (localStorage.getItem("token")) {
+      this.userInfoData();
+    }
+  },
+  methods: {
+    //获取用户信息
+    async userInfoData() {
+      const res = await this.$http.get("/user/" + localStorage.getItem("id"));
+      this.model = res.data[0];
+    },
   },
   components: {
     navBar,
@@ -53,7 +66,7 @@ export default {
       margin-bottom: 5px;
       margin-left: 10px;
     }
-    .avatar{
+    .avatar {
       display: inline-block;
     }
     .avatar img {

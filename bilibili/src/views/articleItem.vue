@@ -18,7 +18,8 @@
         <div class="play-hot">
           <div class="left">
             <span @click="collection">
-              <img src="~assets/img/收藏.png" alt />
+              <img v-show="isCollection" src="~assets/img/收藏red.png" alt />
+              <img v-show="!isCollection" src="~assets/img/收藏.png" alt="">
               收藏
             </span>
             <span>
@@ -42,8 +43,24 @@
     <div class="commend-wrapper">
       <detail class="detail" v-for="(item,index) in commendList" :key="index" :detailItem="item"></detail>
     </div>
-    <commentTitle :model="model" :commentLenght="commentLenght" @editComment="editComment" ref="commentTitle"></commentTitle>
-    <comment class="comment-wrapper" :commentList="commentList" @replyWho="replyWho"  ></comment>
+    <commentTitle
+      :model="model"
+      :commentLenght="commentLenght"
+      @editComment="editComment"
+      ref="commentTitle"
+    ></commentTitle>
+    <comment class="comment-wrapper" :commentList="commentList" @replyWho="replyWho"></comment>
+
+    <!-- 弹窗组件 -->
+    <van-dialog
+      v-model="show"
+      title
+      @confirm="this.isCollection = false"
+      @cancel="this.isCancel = true"
+      show-cancel-button
+    >
+      <div class="dialog-text">是否取消收藏</div>
+    </van-dialog>
   </div>
 </template>
 
@@ -52,38 +69,37 @@ import navBarItem from "components/content/navBarItem/navBarItem";
 import detail from "views/detail";
 import commentTitle from "components/content/comment/commentTitle";
 import comment from "components/content/comment/comment";
-import {getDate} from 'common/tool'
+import { getDate } from "common/tool";
 export default {
   name: "articleItem",
   data() {
     return {
-      model: {},//用户信息
-      articleData: {},//视频详情数据
-      commendList: {},//推荐视频列表
-      commentList: {},//评论列表
-      commentLenght: 0,//获取的评论条数
-      sendComment:{//发送的评论对象
-        comment_content:'',
-        comment_date:'',
-        parent_id:null,
-        article_id:null,
-      }
+      model: {}, //用户信息
+      articleData: {}, //视频详情数据
+      commendList: {}, //推荐视频列表
+      commentList: {}, //评论列表
+      commentLenght: 0, //获取的评论条数
+      sendComment: {
+        //发送的评论对象
+        comment_content: "",
+        comment_date: "",
+        parent_id: null,
+        article_id: null,
+      },
+      isCollection: null, //文章收藏状态
+      show: false, //弹窗标识
+      isCancel: false, //弹窗取消标识
     };
   },
   created() {
     if (localStorage.getItem("token")) {
-      this.userInfoData();
+      this.collectionFlag();
     }
     this.articleItem();
     this.commendData();
     this.commentData();
   },
   methods: {
-    //获取用户信息
-    async userInfoData() {
-      const res = await this.$http.get("/user/" + localStorage.getItem("id"));
-      this.model = res.data[0];
-    },
     //获取本页详细数据
     async articleItem() {
       const res = await this.$http.get("/article/" + this.$route.params.id);
@@ -116,27 +132,52 @@ export default {
       this.commentList = res;
     },
     //发送评论
-   async editComment(content) {
+    async editComment(content) {
       this.sendComment.comment_content = content;
       this.sendComment.comment_date = getDate();
-      this.sendComment.article_id = this.$route.params.id;//上述三个属性是每级评论都有的
-      const res = await this.$http.post('/comment_post/'+localStorage.getItem('id'),this.sendComment);
+      this.sendComment.article_id = this.$route.params.id; //上述三个属性是每级评论都有的
+      const res = await this.$http.post(
+        "/comment_post/" + localStorage.getItem("id"),
+        this.sendComment
+      );
       //再次获取评论
       this.commentData();
       //清空评论对象id，避免下次回复的为同一对象
       this.sendComment.parent_id = null;
-      if(res.status == 200){
-        this.$msg.fail('评论发表成功')//弹窗提示
+      if (res.status == 200) {
+        this.$msg.fail("评论发表成功"); //弹窗提示
       }
     },
     //获取到回复对象的评论信息
-    replyWho(item){
-      this.$refs.commentTitle.getFocus(item.userinfo.name);//获得焦点，修改提示文字为回复对象
-      this.sendComment.parent_id = item.comment_id;//设置评论等级
+    replyWho(item) {
+      this.$refs.commentTitle.getFocus(item.userinfo.name); //获得焦点，修改提示文字为回复对象
+      this.sendComment.parent_id = item.comment_id; //设置评论等级
     },
     //收藏功能
-    async collection(){
-      const res = await this.$http.post('/collection/'+localStorage.getItem('id'),this.$route.params.id)
+    async collection() {
+      if (localStorage.getItem("token")) {
+        const res = await this.$http.post("/collection/" + localStorage.getItem("id"),{ article_id: this.$route.params.id });
+        if(res.data.msg == "收藏成功"){
+          this.isCollection = true;
+          this.$msg.success(res.data.msg);
+        }
+        else{
+          this.isCollection = false;
+          this.$msg.fail(res.data.msg);
+        }
+        console.log(res);
+      }
+    },
+    //进入页面获取收藏状态
+    async collectionFlag() {
+      const res = await this.$http.get("/collection/" + localStorage.getItem("id"),
+        {
+          params: {
+            article_id: this.$route.params.id,
+          },
+        }
+      );
+      this.isCollection = res.data.success;//获取状态
     },
   },
   watch: {
@@ -145,6 +186,7 @@ export default {
       this.articleItem();
       this.commendData();
       this.commentData();
+      this.collectionFlag() ;
     },
   },
   components: {
@@ -252,5 +294,10 @@ export default {
 //评论样式
 .comment-wrapper {
   margin: 10px 15px 9px;
+}
+
+.dialog-text {
+  line-height: 110px;
+  text-align: center;
 }
 </style>
