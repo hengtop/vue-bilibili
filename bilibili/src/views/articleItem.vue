@@ -45,7 +45,7 @@
     </div>
     <commentTitle
       :model="model"
-      :commentLenght="commentLenght"
+      :commentLenght="commentLength"
       @editComment="editComment"
       ref="commentTitle"
     ></commentTitle>
@@ -78,7 +78,7 @@ export default {
       articleData: {}, //视频详情数据
       commendList: {}, //推荐视频列表
       commentList: {}, //评论列表
-      commentLenght: 0, //获取的评论条数
+      commentLength: 0, //获取的评论条数
       sendComment: {
         //发送的评论对象
         comment_content: "",
@@ -113,7 +113,7 @@ export default {
     //获取评论数据
     async commentData() {
       const res = await this.$http.get("/comment/" + this.$route.params.id);
-      this.commentLenght = res.data.length; //获取总的评论个数
+      this.commentLength = res.data.length; //获取总的评论个数
       this.changeCommentData(res.data); //处理得到的评论结构
     },
     //处理改造评论数据方法
@@ -141,7 +141,7 @@ export default {
         this.sendComment
       );
       //再次获取评论
-      this.commentData();
+      await this.commentData();
       //清空评论对象id，避免下次回复的为同一对象
       this.sendComment.parent_id = null;
       if (res.status == 200) {
