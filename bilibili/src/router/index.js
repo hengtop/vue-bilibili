@@ -16,6 +16,8 @@ const routes = [
     path: '/',
     redirect: '/home',
   },
+
+
   {
     path: '/home',
     component: home,
@@ -35,14 +37,14 @@ const routes = [
     path: '/userInfo',
     component: userInfo,
     meta: {
-      istoken: true,//需要验证
+      isToken: true,//需要验证
     }
   },
   {
     path: '/edit',
     component: edit,
     meta: {
-      istoken: true,
+      isToken: true,
     }
   },
   {
@@ -69,7 +71,7 @@ VueRouter.prototype.push = function push(location) {
 //路由守卫
 router.beforeEach((to, from, next) => {
   //console.log(to);
-  if (!localStorage.getItem('token') && !localStorage.getItem('id') && to.meta.istoken == true) {
+  if (!localStorage.getItem('token') && !localStorage.getItem('id') && to.meta.isToken === true) {
     router.push('/login');
     Vue.prototype.$msg.fail('请重新登录');
     return;
